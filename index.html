@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Energy Meter - Real-time Power Monitoring</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Sticky Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="bolt-icon">⚡</span>
+                <span>Smart Energy Meter</span>
+            </div>
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="#hero" class="nav-link">Home</a></li>
+                <li><a href="#dashboard" class="nav-link">Live Dashboard</a></li>
+                <li><a href="#appliances" class="nav-link">Appliances</a></li>
+                <li><a href="#alerts" class="nav-link">Alerts</a></li>
+                <li><a href="#insights" class="nav-link">Insights</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+            </ul>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Smart Energy Meter</h1>
+                <p class="hero-subtitle">Real-time monitoring of household voltage, current, and power usage – powered by ESP32.</p>
+                <div class="hero-buttons">
+                    <a href="#dashboard" class="btn btn-primary">View Live Dashboard</a>
+                    <a href="#about" class="btn btn-secondary">Project Details</a>
+                </div>
+            </div>
+            <div class="hero-illustration">
+                <div class="green-energy-scene">
+                    <div class="energy-waves">
+                        <div class="wave wave-1"></div>
+                        <div class="wave wave-2"></div>
+                        <div class="wave wave-3"></div>
+                    </div>
+                    <div class="leaf-particles">
+                        <div class="leaf leaf-1">🍃</div>
+                        <div class="leaf leaf-2">🍃</div>
+                        <div class="leaf leaf-3">🍃</div>
+                        <div class="leaf leaf-4">🍃</div>
+                    </div>
+                    <div class="nature-silhouette">
+                        <div class="tree tree-1"></div>
+                        <div class="tree tree-2"></div>
+                        <div class="tree tree-3"></div>
+                    </div>
+                    <div class="sun-energy">
+                        <div class="sun"></div>
+                        <div class="sun-rays">
+                            <div class="ray"></div>
+                            <div class="ray"></div>
+                            <div class="ray"></div>
+                            <div class="ray"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Dashboard Section -->
+    <section id="dashboard" class="section dashboard-section">
+        <div class="container">
+            <h2 class="section-title">Live Dashboard</h2>
+            <p class="section-subtitle">These are example values. In the real system, data will come from an ESP32-based meter.</p>
+            
+            <!-- Summary Cards -->
+            <div class="dashboard-cards">
+                <div class="card summary-card">
+                    <div class="card-icon">⚡</div>
+                    <div class="card-content">
+                        <div class="card-value" id="total-power">2.45</div>
+                        <div class="card-label">Total Power (kW)</div>
+                    </div>
+                </div>
+                <div class="card summary-card">
+                    <div class="card-icon">🔌</div>
+                    <div class="card-content">
+                        <div class="card-value" id="total-current">10.2</div>
+                        <div class="card-label">Total Current (A)</div>
+                    </div>
+                </div>
+                <div class="card summary-card">
+                    <div class="card-icon">📊</div>
+                    <div class="card-content">
+                        <div class="card-value" id="line-voltage">120.5</div>
+                        <div class="card-label">Line Voltage (V)</div>
+                    </div>
+                </div>
+                <div class="card summary-card">
+                    <div class="card-icon">⏱️</div>
+                    <div class="card-content">
+                        <div class="card-value" id="today-energy">18.7</div>
+                        <div class="card-label">Today's Energy Usage (kWh)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3 class="chart-title">Voltage Over Time (Last 24 Hours)</h3>
+                    <canvas id="voltageChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Current & Power Usage Over Time (Last 24 Hours)</h3>
+                    <canvas id="powerChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Appliances Section -->
+    <section id="appliances" class="section appliances-section">
+        <div class="container">
+            <h2 class="section-title">Appliances</h2>
+            
+            <!-- Appliance Overview Table -->
+            <div class="appliance-overview">
+                <h3 class="subsection-title">Appliance List & Overview</h3>
+                <div class="search-filter">
+                    <input type="text" id="appliance-search" placeholder="Search appliances..." class="search-input">
+                </div>
+                <div class="table-responsive">
+                    <table class="appliance-table">
+                        <thead>
+                            <tr>
+                                <th>Appliance Name</th>
+                                <th>Circuit / Room</th>
+                                <th>Current (A)</th>
+                                <th>Voltage (V)</th>
+                                <th>Power (W)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appliance-table-body">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Voltage & Current Details -->
+            <div class="appliance-details">
+                <div class="detail-tabs">
+                    <button class="tab-btn active" data-tab="voltage">Voltage by Appliance</button>
+                    <button class="tab-btn" data-tab="current">Current by Appliance</button>
+                </div>
+
+                <!-- Voltage Details -->
+                <div id="voltage-tab" class="tab-content active">
+                    <div class="appliance-cards-grid" id="voltage-cards">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Current Details -->
+                <div id="current-tab" class="tab-content">
+                    <div class="appliance-cards-grid" id="current-cards">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Alerts Section -->
+    <section id="alerts" class="section alerts-section">
+        <div class="container">
+            <h2 class="section-title">Alerts</h2>
+            
+            <!-- Active Alerts -->
+            <div class="active-alerts">
+                <h3 class="subsection-title">Active Alerts</h3>
+                <div class="alerts-list" id="active-alerts-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Alert History -->
+            <div class="alert-history">
+                <h3 class="subsection-title">Recent Alert History</h3>
+                <div class="table-responsive">
+                    <table class="alert-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Alert Type</th>
+                                <th>Affected Appliance / Circuit</th>
+                                <th>Description</th>
+                                <th>Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alert-history-body">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Insights Section -->
+    <section id="insights" class="section insights-section">
+        <div class="container">
+            <h2 class="section-title">Insights & Summaries</h2>
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <div class="insight-icon">🕐</div>
+                    <h3 class="insight-title">Peak Usage Time</h3>
+                    <div class="insight-value">6:00 PM - 9:00 PM</div>
+                    <p class="insight-description">Helps identify phantom loads and peak times</p>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">🔥</div>
+                    <h3 class="insight-title">Most Energy-Hungry Appliance</h3>
+                    <div class="insight-value">Air Conditioner</div>
+                    <p class="insight-description">Consuming 1.2 kW on average</p>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-icon">💰</div>
+                    <h3 class="insight-title">Estimated Daily Cost</h3>
+                    <div class="insight-value">$4.32</div>
+                    <p class="insight-description">Based on current usage patterns</p>
+                </div>
+                <div class="insight-card chart-insight">
+                    <h3 class="insight-title">Weekly Energy Comparison</h3>
+                    <canvas id="weeklyChart"></canvas>
+                    <p class="insight-description">Last 7 days energy consumption</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section about-section">
+        <div class="container">
+            <h2 class="section-title">About the Project</h2>
+            
+            <div class="about-content">
+                <div class="about-subsection">
+                    <h3 class="subsection-title">How It Works</h3>
+                    <ul class="about-list">
+                        <li>ESP32 with isolated voltage and current sensors (e.g., ACS712 + voltage sensor module)</li>
+                        <li>Measures real-time RMS voltage, current, and computes power</li>
+                        <li>Logs data for each circuit/appliance</li>
+                        <li>Data is sent to this web dashboard over Wi-Fi</li>
+                    </ul>
+                </div>
+                
+                <div class="about-subsection">
+                    <h3 class="subsection-title">Project Objectives</h3>
+                    <ul class="about-list">
+                        <li>Reduce energy costs</li>
+                        <li>Detect phantom loads</li>
+                        <li>Improve safety via overcurrent/overvoltage alerts</li>
+                        <li>Provide clear, user-friendly visualizations</li>
+                        <li>Enable data-driven energy management decisions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4 class="footer-title">Smart Energy Meter</h4>
+                    <p>Embedded Systems Lab – UMass Boston</p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-title">Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="#" class="footer-link">GitHub (coming soon)</a></li>
+                        <li><a href="#" class="footer-link">Contact</a></li>
+                        <li><a href="#" class="footer-link">Documentation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <p class="footer-note">Front-end only – data simulated for demo.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Smart Energy Meter. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
