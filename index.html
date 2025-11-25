@@ -24,6 +24,7 @@
                 <li><a href="#appliances" class="nav-link">Appliances</a></li>
                 <li><a href="#alerts" class="nav-link">Alerts</a></li>
                 <li><a href="#insights" class="nav-link">Insights</a></li>
+                <li><a href="#stories" class="nav-link">User Stories</a></li>
                 <li><a href="#about" class="nav-link">About</a></li>
             </ul>
             <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
@@ -36,6 +37,7 @@
 
     <!-- Hero Section -->
     <section id="hero" class="hero">
+        <img src="meter.png" alt="Smart Energy Meter Hardware Setup" class="hero-background-image">
         <div class="hero-container">
             <div class="hero-content">
                 <h1 class="hero-title">Smart Energy Meter</h1>
@@ -258,6 +260,14 @@
             
             <div class="about-content">
                 <div class="about-subsection">
+                    <h3 class="subsection-title">Hardware Setup</h3>
+                    <div class="hardware-image-container">
+                        <img src="meter.png" alt="Smart Energy Meter Hardware Setup - ESP32 with sensors and OLED display" class="hardware-image">
+                    </div>
+                    <p class="hardware-description">Our IoT smart energy meter prototype featuring ESP32 microcontroller, OLED display, voltage and current sensors connected via breadboard.</p>
+                </div>
+                
+                <div class="about-subsection">
                     <h3 class="subsection-title">How It Works</h3>
                     <ul class="about-list">
                         <li>ESP32 with isolated voltage and current sensors (e.g., ACS712 + voltage sensor module)</li>
@@ -279,6 +289,126 @@
                 </div>
             </div>
         </div>
+    </section>
+
+    <!-- User Stories Section -->
+
+    <section id="stories" class="section user-stories-section">
+
+        <div class="container">
+
+            <h2 class="section-title">User Stories</h2>
+
+            <p class="section-subtitle">
+
+                The Smart Energy Meter was designed around three main users: the homeowner, 
+
+                the installation technician, and the power company.
+
+            </p>
+
+
+
+            <div class="user-stories-grid">
+
+                <!-- Homeowner -->
+
+                <article class="user-story-card">
+
+                    <h3 class="user-story-role">Homeowner</h3>
+
+                    <p class="user-story-main">
+
+                        <strong>Daily power overview:</strong> As a homeowner, I want to open the app 
+
+                        and quickly see how much electricity I used today (for example as a simple 
+
+                        bar chart), so I can compare it with previous days.
+
+                    </p>
+
+                    <p class="user-story-main">
+
+                        <strong>High-use alerts:</strong> As a homeowner, I want a notification if my 
+
+                        house suddenly starts using a lot more power than usual, so I can turn off 
+
+                        unnecessary appliances and avoid a high bill.
+
+                    </p>
+
+                    <ul class="user-story-criteria">
+
+                        <li>The dashboard shows a clear bar graph of today's usage.</li>
+
+                        <li>The graph refreshes automatically roughly once every hour.</li>
+
+                    </ul>
+
+                </article>
+
+
+
+                <!-- Technician -->
+
+                <article class="user-story-card">
+
+                    <h3 class="user-story-role">Technician</h3>
+
+                    <p class="user-story-main">
+
+                        <strong>Quick QR setup:</strong> As a technician, I want to set up the smart 
+
+                        meter just by scanning a QR code on the device with my phone, instead of 
+
+                        typing in long IDs or configuration codes.
+
+                    </p>
+
+                    <ul class="user-story-criteria">
+
+                        <li>Each meter has a scannable QR code printed on the side.</li>
+
+                        <li>After scanning, the basic setup completes in under 2 minutes.</li>
+
+                    </ul>
+
+                </article>
+
+
+
+                <!-- Power Company -->
+
+                <article class="user-story-card">
+
+                    <h3 class="user-story-role">Power Company</h3>
+
+                    <p class="user-story-main">
+
+                        <strong>Automatic monthly readings:</strong> As a power company, I want the 
+
+                        system to automatically send a summary of how much power each home used at 
+
+                        the end of the month, so I can generate accurate bills without manual 
+
+                        meter reading.
+
+                    </p>
+
+                    <ul class="user-story-criteria">
+
+                        <li>The system can generate a monthly usage report for a customer.</li>
+
+                        <li>A report is sent automatically (for example by email) on the 1st of each month.</li>
+
+                    </ul>
+
+                </article>
+
+            </div>
+
+        </div>
+
     </section>
 
     <!-- Footer -->
