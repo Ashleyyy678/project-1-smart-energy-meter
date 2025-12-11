@@ -5,9 +5,6 @@ const BACKEND_URL = window.location.hostname === 'localhost' || window.location.
     ? 'http://localhost:3000'
     : 'https://smart-energy-meter-f2vv.onrender.com';
 
-// Note: Backend no longer uses Socket.io - using REST API polling instead
-// Socket.io is removed to prevent false connection status
-
 // Connection status indicator
 let connectionStatus = {
     connected: false,
@@ -21,13 +18,13 @@ function updateConnectionStatus() {
     if (statusEl) {
         // Only show "Live (ESP32)" if we actually have recent ESP32 data
         if (connectionStatus.usingESP32 && connectionStatus.connected) {
-            // Check if data is stale (older than 10 seconds = ESP32 likely disconnected)
+            // Check if data is stale (older than 15 seconds = ESP32 likely disconnected)
             const now = Date.now();
             const timeSinceLastData = connectionStatus.lastDataTimestamp 
                 ? (now - connectionStatus.lastDataTimestamp) 
                 : Infinity;
             
-            if (timeSinceLastData < 15000) {  // Less than 15 seconds = still live (allows for network delays)
+            if (timeSinceLastData < 15000) {  // Less than 15 seconds = still live
                 statusEl.textContent = '🟢 Live (ESP32)';
                 statusEl.className = 'connection-status connected';
             } else {
@@ -45,9 +42,6 @@ function updateConnectionStatus() {
         }
     }
 }
-
-// Socket.io removed - backend now uses REST API only
-// All updates come through fetchLatestReading() polling
 
 // ============= REST API Polling (Primary method - backend no longer uses Socket.io) =============
 
@@ -641,9 +635,9 @@ function initMobileNav() {
 let dashboardSimulationInterval = null;
 
 function updateDashboardValues() {
-    // Only simulate if we're not receiving real data from Socket.io
-    // Real updates come via Socket.io 'dashboard-update' event
-    // This function is kept for initial display/fallback only
+    // Real updates come via REST API polling (fetchLatestReading)
+    // This function is kept for compatibility but doesn't do anything
+    // All dashboard updates are handled by the REST API polling interval
 
     // Clear any existing interval
     if (dashboardSimulationInterval) {
@@ -651,7 +645,7 @@ function updateDashboardValues() {
         dashboardSimulationInterval = null;
     }
 
-    // Don't run simulation - Socket.io will handle all updates
+    // Don't run simulation - REST API polling handles all updates
     // This prevents interference with real ESP32 data
 }
 
@@ -1114,6 +1108,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize connection status
     updateConnectionStatus();
+    
+    // Start fetching ESP32 data immediately
+    fetchLatestReading();
 
     // Profile and Insights
     initProfileForm();
