@@ -612,7 +612,7 @@ float calculateAveragePower() {
   return count > 0 ? sum / count : 0;
 }
 
-float findMaxPower() 
+float findMaxPower() {
   float maxP = 0;
   for (int i = 0; i < 60; i++) {
     if (powerReadings[i] > maxP) {
