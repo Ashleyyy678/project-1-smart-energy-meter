@@ -573,20 +573,33 @@ void sendDataToWiFi() {
   char voltageStr[10];
   snprintf(voltageStr, sizeof(voltageStr), "%.2f", voltageRMS);  // 2 decimal places, matches Serial
   
+  // Build JSON payload - ensure proper formatting
   String jsonPayload = "{";
   jsonPayload += "\"deviceId\":\"" + String(DEVICE_ID) + "\",";
-  jsonPayload += "\"voltage\":" + String(voltageStr) + ",";  // Same value as Serial, 2 decimals
+  jsonPayload += "\"voltage\":" + String(voltageStr) + ",";
   jsonPayload += "\"current\":" + String(currentRMS * 1000, 1) + ",";  // Convert to mA
   jsonPayload += "\"power\":" + String(realPower, 1) + ",";
   jsonPayload += "\"rawAdc\":" + String(analogRead(VOLTAGE_SENSOR_PIN)) + ",";
   jsonPayload += "\"timestamp\":" + String(millis());
   jsonPayload += "}";
 
+  // Debug: Print the JSON being sent
+  Serial.print("POSTing JSON: ");
+  Serial.println(jsonPayload);
+
   int httpResponseCode = http.POST(jsonPayload);
   
   if (httpResponseCode > 0) {
-    Serial.print("WiFi POST success: ");
+    Serial.print("WiFi POST response: ");
     Serial.println(httpResponseCode);
+    if (httpResponseCode != 200) {
+      // If not 200, print the response body to see the error
+      String response = http.getString();
+      Serial.print("Error response: ");
+      Serial.println(response);
+    } else {
+      Serial.println("✓ Data sent successfully!");
+    }
   } else {
     Serial.print("WiFi POST failed: ");
     Serial.println(httpResponseCode);

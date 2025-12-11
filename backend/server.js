@@ -22,21 +22,35 @@ const latestReadings = new Map();
 // POST /readings - Store latest reading from ESP32
 // Accepts: { deviceId, voltage, current, power, rawAdc, timestamp }
 app.post('/readings', (req, res) => {
-    const { deviceId = 'esp32_1', voltage, current, power, rawAdc, timestamp } = req.body;
+    console.log('📥 POST /readings received');
+    console.log('Request body:', JSON.stringify(req.body));
     
-    // Store latest reading for this device
-    latestReadings.set(deviceId, {
-        deviceId,
-        voltage: parseFloat(voltage) || 0,
-        current: parseFloat(current) || 0,
-        power: parseFloat(power) || 0,
-        rawAdc: parseInt(rawAdc) || 0,
-        timestamp: timestamp || Date.now()
-    });
-    
-    console.log(`📡 Stored reading for ${deviceId}:`, latestReadings.get(deviceId));
-    
-    res.json({ ok: true });
+    try {
+        const { deviceId = 'esp32_1', voltage, current, power, rawAdc, timestamp } = req.body;
+        
+        // Validate required fields
+        if (voltage === undefined && current === undefined && power === undefined) {
+            console.log('❌ Missing required fields (voltage, current, or power)');
+            return res.status(400).json({ error: 'Missing required fields: voltage, current, or power' });
+        }
+        
+        // Store latest reading for this device
+        latestReadings.set(deviceId, {
+            deviceId,
+            voltage: parseFloat(voltage) || 0,
+            current: parseFloat(current) || 0,
+            power: parseFloat(power) || 0,
+            rawAdc: parseInt(rawAdc) || 0,
+            timestamp: timestamp || Date.now()
+        });
+        
+        console.log(`✅ Stored reading for ${deviceId}:`, latestReadings.get(deviceId));
+        
+        res.json({ ok: true });
+    } catch (error) {
+        console.error('❌ Error processing reading:', error);
+        res.status(400).json({ error: 'Invalid request format', details: error.message });
+    }
 });
 
 // GET /latest?deviceId=esp32_1 - Get latest reading for a device
