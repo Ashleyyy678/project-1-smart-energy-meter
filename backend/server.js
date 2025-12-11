@@ -44,9 +44,13 @@ app.get('/latest', (req, res) => {
     const deviceId = req.query.deviceId || 'esp32_1';
     const reading = latestReadings.get(deviceId);
     
+    console.log(`📥 GET /latest request for ${deviceId}, has data: ${!!reading}`);
+    
     if (reading) {
+        console.log(`📤 Sending reading:`, reading);
         res.json(reading);
     } else {
+        console.log(`📭 No reading found for ${deviceId}`);
         res.json({});
     }
 });

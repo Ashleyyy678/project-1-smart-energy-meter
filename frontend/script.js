@@ -54,6 +54,8 @@ async function fetchLatestReading(deviceId = 'esp32_1') {
         }
         const data = await response.json();
         
+        console.log('Backend response:', data); // Debug log
+        
         // Check if backend returned actual ESP32 data (not empty object)
         if (data && Object.keys(data).length > 0 && (data.voltage !== undefined || data.current !== undefined || data.power !== undefined)) {
             // Create a hash of the data to detect if it's actually new (timestamp changes when ESP32 sends new data)
@@ -62,6 +64,10 @@ async function fetchLatestReading(deviceId = 'esp32_1') {
             
             // Check if this is actually new data (timestamp or values changed)
             const isNewData = connectionStatus.lastDataHash !== dataHash;
+            
+            // Always mark backend as reachable when we get data (even if unchanged)
+            connectionStatus.connected = true;
+            connectionStatus.usingESP32 = true;
             
             if (isNewData) {
                 // This is new data from ESP32 - update timestamp
@@ -79,24 +85,28 @@ async function fetchLatestReading(deviceId = 'esp32_1') {
                 
                 updateDashboard(dashboardData);
                 updateLastUpdated(new Date(now));
-                
-                // Mark as connected with ESP32 data
-                connectionStatus.connected = true;
-                connectionStatus.usingESP32 = true;
+                console.log('Updated dashboard with new data:', dashboardData); // Debug log
+            } else {
+                // Data hasn't changed, but ESP32 is still connected - update timestamp for staleness check
+                if (!connectionStatus.lastDataTimestamp) {
+                    connectionStatus.lastDataTimestamp = now;
+                }
+                console.log('Same data, ESP32 still connected'); // Debug log
             }
-            // If data hasn't changed, don't update timestamp - let staleness detection handle it
             
             updateConnectionStatus();
         } else {
             // Backend is reachable but no ESP32 data available
-            connectionStatus.connected = false;
-            connectionStatus.usingESP32 = false;
+            console.log('Backend reachable but no ESP32 data'); // Debug log
+            connectionStatus.connected = true; // Backend is reachable
+            connectionStatus.usingESP32 = false; // But no ESP32 data
             connectionStatus.lastDataTimestamp = null;
             connectionStatus.lastDataHash = null;
             updateConnectionStatus();
         }
     } catch (error) {
         console.error('Failed to fetch latest reading:', error);
+        console.error('Backend URL:', BACKEND_URL); // Debug log
         // Backend is not reachable
         connectionStatus.connected = false;
         connectionStatus.usingESP32 = false;
