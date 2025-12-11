@@ -15,8 +15,8 @@ const int MODE_BUTTON        = 4;    // push button to change LCD modes
 
 // ================= WIFI CONFIGURATION =================
 // Primary WiFi Setup (Basic WPA2)
-const char* PRIMARY_SSID = "Pratham";
-const char* PRIMARY_PASSWORD = "pratham2505";
+const char* PRIMARY_SSID = "Galaxy S20 FE 5G 7282";
+const char* PRIMARY_PASSWORD = "locknessmonster";
 
 // School WiFi Setup (WPA2-Enterprise) - eduroam network (backup)
 const char* SCHOOL_SSID = "eduroam";
