@@ -559,12 +559,21 @@ void sendDataToWiFi() {
   bool useHTTPS = (strstr(SERVER_URL, "https://") != NULL);
   
   HTTPClient http;
+  WiFiClientSecure secureClient; // Declare outside if block to keep in scope
+  
   if (useHTTPS) {
-    WiFiClientSecure client;
-    client.setInsecure(); // Accept any certificate (acceptable for class demo)
-    http.begin(client, SERVER_URL);
+    // For HTTPS, must use WiFiClientSecure
+    secureClient.setInsecure(); // Accept any certificate (acceptable for class demo)
+    // Use the secure client with the full HTTPS URL
+    if (!http.begin(secureClient, SERVER_URL)) {
+      Serial.println("Failed to begin HTTPS connection!");
+      return;
+    }
+    Serial.println("Using HTTPS connection");
   } else {
+    // For HTTP, use regular WiFiClient
     http.begin(SERVER_URL);
+    Serial.println("Using HTTP connection");
   }
   http.addHeader("Content-Type", "application/json");
 
