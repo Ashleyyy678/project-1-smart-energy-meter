@@ -15,32 +15,25 @@ const int MODE_BUTTON        = 4;    // push button to change LCD modes
 
 // ================= WIFI CONFIGURATION =================
 // Home WiFi Setup (Basic WPA2)
-const char* HOME_SSID = "pookie";              // Replace with your home WiFi network name
-const char* HOME_PASSWORD = "Adipatel@69";     // Your home WiFi password
+const char* HOME_SSID = "pookie";
+const char* HOME_PASSWORD = "Adipatel@69";
 
 // School WiFi Setup (WPA2-Enterprise) - eduroam network
-const char* SCHOOL_SSID = "eduroam";                    // eduroam WiFi network
-const char* SCHOOL_USERNAME = "raghav.kalani001";      // Your school username/NetID
-const char* SCHOOL_PASSWORD = "Rajshree@0204142219";   // Your school password
+const char* SCHOOL_SSID = "eduroam";
+const char* SCHOOL_USERNAME = "raghav.kalani001";
+const char* SCHOOL_PASSWORD = "Rajshree#0204142219";  // UPDATE THIS with your new school WiFi password
 
 // WiFi connection priority: HOME_FIRST tries home WiFi, then school if home fails
-// Set to false to try school WiFi first
 #define WIFI_PRIORITY_HOME_FIRST true
 
-// Server URL - Render production deployment
-// For local development: "http://10.0.0.99:3000/readings"
-// For Render production: "https://smart-energy-meter-f2vv.onrender.com/readings"
+// Backend server URL (Render deployment)
 const char* SERVER_URL = "https://smart-energy-meter-f2vv.onrender.com/readings";
-const char* serverURL = SERVER_URL; // Legacy alias (keep for backward compatibility)
-
-// Device identifier for REST API
 const char* DEVICE_ID = "esp32_1";
 
 // WiFi connection state
 bool wifiConnected = false;
 unsigned long lastWiFiAttempt = 0;
 const unsigned long WIFI_RECONNECT_INTERVAL = 30000; // Try to reconnect every 30 seconds
-bool usingHomeWiFi = true; // Track which WiFi is currently being used
 
 // ============== ACS712 30A CONSTANTS ==========
 const float ADC_VREF        = 3.3;       // ESP32 ADC reference
@@ -456,116 +449,90 @@ void sendDataToSerial() {
 
 // ============== WIFI FUNCTIONS =============
 
-// Connect to home WiFi (basic WPA2)
-bool connectToHomeWiFi() {
-  Serial.println("\n=== Trying Home WiFi ===");
-  Serial.print("SSID: ");
-  Serial.println(HOME_SSID);
-  
+void connectToWiFi() {
   WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
+  WiFi.disconnect(); // Disconnect any existing connection
   delay(100);
   
-  Serial.println("Using basic WPA2 authentication...");
-  WiFi.begin(HOME_SSID, HOME_PASSWORD);
-  
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-    delay(500);
-    Serial.print(".");
-    attempts++;
-  }
+  #if WIFI_PRIORITY_HOME_FIRST
+    // Try home WiFi first
+    Serial.print("Trying home WiFi: ");
+    Serial.println(HOME_SSID);
+    Serial.println("Using basic WPA2 authentication...");
+    WiFi.begin(HOME_SSID, HOME_PASSWORD);
+    
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+      delay(500);
+      Serial.print(".");
+      attempts++;
+    }
+    
+    // If home WiFi failed, try school WiFi
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("\n✗ Home WiFi failed, trying school WiFi...");
+      WiFi.disconnect();
+      delay(100);
+      
+      Serial.print("Connecting to school WiFi: ");
+      Serial.println(SCHOOL_SSID);
+      Serial.println("Using WPA2-Enterprise authentication...");
+      
+      // WPA2-Enterprise connection (for school/corporate WiFi)
+      esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)SCHOOL_USERNAME, strlen(SCHOOL_USERNAME));
+      esp_wifi_sta_wpa2_ent_set_username((uint8_t *)SCHOOL_USERNAME, strlen(SCHOOL_USERNAME));
+      esp_wifi_sta_wpa2_ent_set_password((uint8_t *)SCHOOL_PASSWORD, strlen(SCHOOL_PASSWORD));
+      esp_wifi_sta_wpa2_ent_enable();
+      
+      WiFi.begin(SCHOOL_SSID);
+      
+      attempts = 0;
+      while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+        delay(1000);  // Longer delay for enterprise networks
+        Serial.print(".");
+        attempts++;
+      }
+    }
+  #else
+    // Direct school WiFi connection (skip home)
+    Serial.print("Connecting to school WiFi: ");
+    Serial.println(SCHOOL_SSID);
+    Serial.println("Using WPA2-Enterprise authentication...");
+    
+    esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)SCHOOL_USERNAME, strlen(SCHOOL_USERNAME));
+    esp_wifi_sta_wpa2_ent_set_username((uint8_t *)SCHOOL_USERNAME, strlen(SCHOOL_USERNAME));
+    esp_wifi_sta_wpa2_ent_set_password((uint8_t *)SCHOOL_PASSWORD, strlen(SCHOOL_PASSWORD));
+    esp_wifi_sta_wpa2_ent_enable();
+    
+    WiFi.begin(SCHOOL_SSID);
+    
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+      delay(1000);  // Longer delay for enterprise networks
+      Serial.print(".");
+      attempts++;
+    }
+  #endif
   
   if (WiFi.status() == WL_CONNECTED) {
     wifiConnected = true;
-    usingHomeWiFi = true;
-    Serial.println("\n✓ Home WiFi connected!");
+    Serial.println("\n✓ WiFi connected!");
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
     Serial.print("Signal strength (RSSI): ");
     Serial.print(WiFi.RSSI());
     Serial.println(" dBm");
-    return true;
   } else {
-    Serial.println("\n✗ Home WiFi connection failed!");
-    return false;
-  }
-}
-
-// Connect to school WiFi (WPA2-Enterprise)
-bool connectToSchoolWiFi() {
-  Serial.println("\n=== Trying School WiFi ===");
-  Serial.print("SSID: ");
-  Serial.println(SCHOOL_SSID);
-  
-  WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
-  delay(100);
-  
-  Serial.println("Using WPA2-Enterprise authentication...");
-  esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)SCHOOL_USERNAME, strlen(SCHOOL_USERNAME));
-  esp_wifi_sta_wpa2_ent_set_username((uint8_t *)SCHOOL_USERNAME, strlen(SCHOOL_USERNAME));
-  esp_wifi_sta_wpa2_ent_set_password((uint8_t *)SCHOOL_PASSWORD, strlen(SCHOOL_PASSWORD));
-  esp_wifi_sta_wpa2_ent_enable();
-  
-  WiFi.begin(SCHOOL_SSID);
-  
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
-    delay(1000);  // Longer delay for enterprise networks
-    Serial.print(".");
-    attempts++;
-  }
-  
-  if (WiFi.status() == WL_CONNECTED) {
-    wifiConnected = true;
-    usingHomeWiFi = false;
-    Serial.println("\n✓ School WiFi connected!");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-    Serial.print("Signal strength (RSSI): ");
-    Serial.print(WiFi.RSSI());
-    Serial.println(" dBm");
-    return true;
-  } else {
-    Serial.println("\n✗ School WiFi connection failed!");
+    wifiConnected = false;
+    Serial.println("\n✗ WiFi connection failed!");
     Serial.println("Possible reasons:");
     Serial.println("  - Wrong username or password");
     Serial.println("  - Network requires certificate");
     Serial.println("  - Network isolates devices");
     Serial.println("  - MAC address not registered");
-    return false;
+    Serial.println("  - WiFi router is too far away");
+    Serial.println("\nData will still be sent over Serial.");
   }
-}
-
-// Main WiFi connection function - tries home first, then school (or vice versa)
-void connectToWiFi() {
-  Serial.println("\n=== WiFi Connection Attempt ===");
-  
-  #if WIFI_PRIORITY_HOME_FIRST
-    // Try home WiFi first
-    if (connectToHomeWiFi()) {
-      return; // Success!
-    }
-    // If home failed, try school WiFi
-    if (connectToSchoolWiFi()) {
-      return; // Success!
-    }
-  #else
-    // Try school WiFi first
-    if (connectToSchoolWiFi()) {
-      return; // Success!
-    }
-    // If school failed, try home WiFi
-    if (connectToHomeWiFi()) {
-      return; // Success!
-    }
-  #endif
-  
-  // Both failed
-  wifiConnected = false;
-  Serial.println("\n✗ All WiFi connection attempts failed!");
-  Serial.println("Data will still be sent over Serial.");
 }
 
 void checkWiFiConnection() {
@@ -588,40 +555,31 @@ void sendDataToWiFi() {
     return;
   }
 
-  // Check if using HTTPS (Render) or HTTP (local development)
+  // Check if using HTTPS (Render deployment)
   bool useHTTPS = (strstr(SERVER_URL, "https://") != NULL);
   
   HTTPClient http;
-  
   if (useHTTPS) {
-    // HTTPS support for Render deployment
     WiFiClientSecure client;
     client.setInsecure(); // Accept any certificate (acceptable for class demo)
     http.begin(client, SERVER_URL);
   } else {
-    // HTTP for local development
     http.begin(SERVER_URL);
   }
-  
   http.addHeader("Content-Type", "application/json");
 
-  // Create JSON payload matching REST API format: { deviceId, voltage, current, power, rawAdc, timestamp }
+  // Create JSON payload matching backend REST API format
   // Use EXACT SAME voltageRMS variable that is printed to Serial (no recomputation)
-  // Voltage: Use same voltageRMS with 2 decimal places (matches Serial format)
-  // Current: Convert to milliamps (mA) to match frontend display
-  // Power: Use realPower in Watts (W)
-  
   char voltageStr[10];
   snprintf(voltageStr, sizeof(voltageStr), "%.2f", voltageRMS);  // 2 decimal places, matches Serial
   
-  // REST API format for /readings endpoint
   String jsonPayload = "{";
   jsonPayload += "\"deviceId\":\"" + String(DEVICE_ID) + "\",";
   jsonPayload += "\"voltage\":" + String(voltageStr) + ",";  // Same value as Serial, 2 decimals
-  jsonPayload += "\"current\":" + String(currentRMS * 1000, 1) + ",";  // Convert to mA (matches frontend)
-  jsonPayload += "\"power\":" + String(realPower, 1) + ",";  // Watts
+  jsonPayload += "\"current\":" + String(currentRMS * 1000, 1) + ",";  // Convert to mA
+  jsonPayload += "\"power\":" + String(realPower, 1) + ",";
   jsonPayload += "\"rawAdc\":" + String(analogRead(VOLTAGE_SENSOR_PIN)) + ",";
-  jsonPayload += "\"timestamp\":" + String(millis());  // ESP32 uptime in ms
+  jsonPayload += "\"timestamp\":" + String(millis());
   jsonPayload += "}";
 
   int httpResponseCode = http.POST(jsonPayload);
@@ -632,9 +590,9 @@ void sendDataToWiFi() {
   } else {
     Serial.print("WiFi POST failed: ");
     Serial.println(httpResponseCode);
-    if (useHTTPS) {
-      Serial.println("Note: HTTPS requires valid certificate. Using setInsecure() for demo.");
-    }
+    String response = http.getString();
+    Serial.print("Response: ");
+    Serial.println(response);
   }
   
   http.end();
