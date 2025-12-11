@@ -12,7 +12,8 @@ const BACKEND_URL = window.location.hostname === 'localhost' || window.location.
 let connectionStatus = {
     connected: false,
     usingESP32: false,
-    lastDataTimestamp: null  // Track when we last received ESP32 data
+    lastDataTimestamp: null,  // Track when we last received ESP32 data
+    lastDataHash: null  // Track the hash of last data to detect if it's actually new
 };
 
 function updateConnectionStatus() {
@@ -26,14 +27,17 @@ function updateConnectionStatus() {
                 ? (now - connectionStatus.lastDataTimestamp) 
                 : Infinity;
             
-            if (timeSinceLastData < 10000) {  // Less than 10 seconds = still live
+            if (timeSinceLastData < 15000) {  // Less than 15 seconds = still live (allows for network delays)
                 statusEl.textContent = '🟢 Live (ESP32)';
                 statusEl.className = 'connection-status connected';
             } else {
+                // Data is stale - ESP32 likely disconnected
                 statusEl.textContent = '🔴 ESP32 Disconnected';
                 statusEl.className = 'connection-status disconnected';
                 connectionStatus.usingESP32 = false;
                 connectionStatus.connected = false;
+                connectionStatus.lastDataTimestamp = null;
+                connectionStatus.lastDataHash = null;
             }
         } else {
             statusEl.textContent = '🔴 Offline';
@@ -58,29 +62,43 @@ async function fetchLatestReading(deviceId = 'esp32_1') {
         
         // Check if backend returned actual ESP32 data (not empty object)
         if (data && Object.keys(data).length > 0 && (data.voltage !== undefined || data.current !== undefined || data.power !== undefined)) {
-            // Convert REST API format to dashboard format
-            const dashboardData = {
-                totalCurrent: data.current || 0,
-                totalPower: data.power || 0,
-                voltage: data.voltage || 0,
-                lineVoltage: data.voltage || 0,
-                todayEnergy: 0  // REST API doesn't include energy, keep at 0 or calculate
-            };
+            // Create a hash of the data to detect if it's actually new (timestamp changes when ESP32 sends new data)
+            const dataHash = `${data.timestamp}_${data.voltage}_${data.current}_${data.power}`;
+            const now = Date.now();
             
-            updateDashboard(dashboardData);
-            // ESP32 timestamp is millis() since boot, so use current time for display
-            const now = new Date();
-            updateLastUpdated(now);
+            // Check if this is actually new data (timestamp or values changed)
+            const isNewData = connectionStatus.lastDataHash !== dataHash;
             
-            // Mark as connected with ESP32 data (use current time for staleness detection)
-            connectionStatus.connected = true;
-            connectionStatus.usingESP32 = true;
-            connectionStatus.lastDataTimestamp = now.getTime();  // Store when we received this data
+            if (isNewData) {
+                // This is new data from ESP32 - update timestamp
+                connectionStatus.lastDataTimestamp = now;
+                connectionStatus.lastDataHash = dataHash;
+                
+                // Convert REST API format to dashboard format
+                const dashboardData = {
+                    totalCurrent: data.current || 0,
+                    totalPower: data.power || 0,
+                    voltage: data.voltage || 0,
+                    lineVoltage: data.voltage || 0,
+                    todayEnergy: 0  // REST API doesn't include energy, keep at 0 or calculate
+                };
+                
+                updateDashboard(dashboardData);
+                updateLastUpdated(new Date(now));
+                
+                // Mark as connected with ESP32 data
+                connectionStatus.connected = true;
+                connectionStatus.usingESP32 = true;
+            }
+            // If data hasn't changed, don't update timestamp - let staleness detection handle it
+            
             updateConnectionStatus();
         } else {
             // Backend is reachable but no ESP32 data available
             connectionStatus.connected = false;
             connectionStatus.usingESP32 = false;
+            connectionStatus.lastDataTimestamp = null;
+            connectionStatus.lastDataHash = null;
             updateConnectionStatus();
         }
     } catch (error) {
@@ -88,6 +106,8 @@ async function fetchLatestReading(deviceId = 'esp32_1') {
         // Backend is not reachable
         connectionStatus.connected = false;
         connectionStatus.usingESP32 = false;
+        connectionStatus.lastDataTimestamp = null;
+        connectionStatus.lastDataHash = null;
         updateConnectionStatus();
     }
 }
