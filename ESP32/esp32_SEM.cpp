@@ -14,17 +14,17 @@ const int VOLTAGE_SENSOR_PIN = 35;   // Voltage sensor S (signal) pin → ESP32 
 const int MODE_BUTTON        = 4;    // push button to change LCD modes
 
 // ================= WIFI CONFIGURATION =================
-// Home WiFi Setup (Basic WPA2)
-const char* HOME_SSID = "pookie";
-const char* HOME_PASSWORD = "Adipatel@69";
+// Primary WiFi Setup (Basic WPA2)
+const char* PRIMARY_SSID = "Pratham";
+const char* PRIMARY_PASSWORD = "pratham2505";
 
-// School WiFi Setup (WPA2-Enterprise) - eduroam network
+// School WiFi Setup (WPA2-Enterprise) - eduroam network (backup)
 const char* SCHOOL_SSID = "eduroam";
 const char* SCHOOL_USERNAME = "raghav.kalani001";
-const char* SCHOOL_PASSWORD = "Rajshree#0204142219";  // UPDATE THIS with your new school WiFi password
+const char* SCHOOL_PASSWORD = "Rajshree#0204142219";
 
-// WiFi connection priority: HOME_FIRST tries home WiFi, then school if home fails
-#define WIFI_PRIORITY_HOME_FIRST true
+// WiFi connection priority: PRIMARY_FIRST tries primary WiFi, then school if primary fails
+#define WIFI_PRIORITY_PRIMARY_FIRST true
 
 // Backend server URL (Render deployment)
 const char* SERVER_URL = "https://smart-energy-meter-f2vv.onrender.com/readings";
@@ -454,12 +454,12 @@ void connectToWiFi() {
   WiFi.disconnect(); // Disconnect any existing connection
   delay(100);
   
-  #if WIFI_PRIORITY_HOME_FIRST
-    // Try home WiFi first
-    Serial.print("Trying home WiFi: ");
-    Serial.println(HOME_SSID);
+  #if WIFI_PRIORITY_PRIMARY_FIRST
+    // Try primary WiFi first
+    Serial.print("Trying primary WiFi: ");
+    Serial.println(PRIMARY_SSID);
     Serial.println("Using basic WPA2 authentication...");
-    WiFi.begin(HOME_SSID, HOME_PASSWORD);
+    WiFi.begin(PRIMARY_SSID, PRIMARY_PASSWORD);
     
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 20) {
@@ -468,9 +468,9 @@ void connectToWiFi() {
       attempts++;
     }
     
-    // If home WiFi failed, try school WiFi
+    // If primary WiFi failed, try school WiFi
     if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("\n✗ Home WiFi failed, trying school WiFi...");
+      Serial.println("\n✗ Primary WiFi failed, trying school WiFi...");
       WiFi.disconnect();
       delay(100);
       
@@ -612,7 +612,7 @@ float calculateAveragePower() {
   return count > 0 ? sum / count : 0;
 }
 
-float findMaxPower() {
+float findMaxPower() 
   float maxP = 0;
   for (int i = 0; i < 60; i++) {
     if (powerReadings[i] > maxP) {
